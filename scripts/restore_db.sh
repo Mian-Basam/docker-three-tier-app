@@ -15,4 +15,12 @@ echo "stopping api to avoid writes during restore"
 docker compose stop api
 gunzip -c "$FILE" | docker compose exec -T db psql -v ON_ERROR_STOP=1 -q -U "$DB_USER" -d "$DB_NAME"
 docker compose start api
+# "start" returns before the API is ready; wait until every api replica is healthy
+# (not "up --wait", which would reset a scaled-out service back to 1 replica)
+for _ in $(seq 60); do
+  health=$(docker compose ps api --format '{{.Health}}')
+  [[ -n "$health" ]] && ! grep -qv '^healthy$' <<<"$health" && break
+  sleep 1
+done
+grep -qv '^healthy$' <<<"$health" && { echo "api did not become healthy after restore" >&2; exit 1; }
 echo "restore complete"
