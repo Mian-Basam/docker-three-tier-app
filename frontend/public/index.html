@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TaskBoard</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>TaskBoard</h1>
+    <span id="health" class="pill">checking…</span>
+  </header>
+  <form id="new-task">
+    <input id="title" placeholder="New task…" maxlength="200" required>
+    <button type="submit">Add</button>
+  </form>
+  <main class="board">
+    <section data-status="todo"><h2>To do <span class="count"></span></h2><ul></ul></section>
+    <section data-status="doing"><h2>Doing <span class="count"></span></h2><ul></ul></section>
+    <section data-status="done"><h2>Done <span class="count"></span></h2><ul></ul></section>
+  </main>
+  <footer id="served-by"></footer>
+  <script src="/app.js"></script>
+</body>
+</html>

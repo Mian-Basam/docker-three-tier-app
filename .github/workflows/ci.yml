@@ -1,0 +1,36 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r api/requirements-dev.txt
+      - run: cd api && ruff check . && pytest -q
+      - uses: hadolint/hadolint-action@v3.1.0
+        with: { dockerfile: api/Dockerfile }
+      - uses: hadolint/hadolint-action@v3.1.0
+        with: { dockerfile: nginx/Dockerfile }
+      - run: shellcheck scripts/*.sh
+
+  e2e:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start stack
+        run: make up
+      - name: End-to-end test
+        run: make e2e
+      - name: Scale API to 3 replicas and re-test
+        run: make scale && make e2e
+      - name: Backup and restore round trip
+        run: |
+          ./scripts/backup_db.sh
+          echo taskboard | ./scripts/restore_db.sh "$(ls -t backups/*.sql.gz | head -1)"
+          make e2e
+      - if: failure()
+        run: docker compose logs
