@@ -8,3 +8,7 @@ if [[ ! -s secrets/db_password.txt ]]; then
   head -c 24 /dev/urandom | base64 | tr -d '/+=' > secrets/db_password.txt
   echo "generated secrets/db_password.txt"
 fi
+# Docker Compose mounts file-based secrets with the host file's permissions, and the API
+# container runs as a non-root user (UID 10001), so the file must be readable by it.
+# It stays git-ignored; real deployments should use a secret store (Swarm/K8s secrets, Vault).
+chmod 0644 secrets/db_password.txt
